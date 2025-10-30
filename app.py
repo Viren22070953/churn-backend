@@ -4,10 +4,12 @@ import pandas as pd
 import logging
 import numpy as np
 import os
+import certifi
 from pymongo import MongoClient
 from flask_cors import CORS
 from io import BytesIO
 from dotenv import load_dotenv
+
 
 # ------------------ Load environment variables ------------------ #
 load_dotenv()
@@ -25,9 +27,10 @@ logger = logging.getLogger(__name__)
 try:
     MONGO_URI = os.getenv("MONGO_URI")
     if not MONGO_URI:
-        raise ValueError("⚠️ MONGO_URI environment variable not found")
+        raise ValueError("⚠️ MONGO_URI not found in environment")
 
-    client = MongoClient(MONGO_URI)
+    # Use certifi to ensure trusted SSL connection
+    client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
     db = client["ChurnDB"]
     predictions_collection = db["Predictions"]
     logger.info("✅ Connected to MongoDB Atlas successfully")
