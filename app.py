@@ -317,6 +317,10 @@ from pymongo import MongoClient
 from flask_cors import CORS  
 from io import BytesIO
 
+from dotenv import load_dotenv
+load_dotenv()
+
+
 print("🚀 Flask app.py started...")
 
 app = Flask(__name__)
@@ -327,14 +331,23 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ------------------ DB Connection ------------------ #
+
+
 try:
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGO_URI = os.getenv("MONGO_URI")  # Get from environment variable
+
+    if not MONGO_URI:
+        raise ValueError("⚠️ MONGO_URI environment variable not found")
+
+    client = MongoClient(MONGO_URI)
     db = client["ChurnDB"]
     predictions_collection = db["Predictions"]
-    logger.info("✅ Connected to MongoDB")
+    logger.info("✅ Connected to MongoDB Atlas successfully")
+
 except Exception as e:
     logger.error(f"❌ MongoDB connection failed: {str(e)}")
     predictions_collection = None
+
 
 # ------------------ Load Model & Scaler ------------------ #
 MODEL_PATH = os.path.join('Models', 'model.pkl')
