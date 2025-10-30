@@ -75,7 +75,7 @@ def predict_batch():
         all_results = []
 
         # Read CSV in chunks for efficiency
-        chunks = pd.read_csv(file, chunksize=100)
+        chunks = pd.read_csv(file, chunksize=20)
         for chunk in chunks:
             df_chunk = chunk.copy()
 
