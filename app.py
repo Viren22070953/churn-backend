@@ -216,90 +216,7 @@ full_features = [
     "Contract", "MonthlyCharges", "TotalCharges", "tenure"
 ]
 
-# ------------------ Batch Prediction Route ------------------ #
-# @app.route('/predict-batch', methods=['POST'])
-# def predict_batch():
-#     try:
-#         logger.info("🔥 Received batch CSV prediction request")
 
-#         if 'file' not in request.files:
-#             return jsonify({"error": "CSV file not provided"}), 400
-
-#         file = request.files['file']
-#         if file.filename == '':
-#             return jsonify({"error": "Empty file name"}), 400
-
-#         df = pd.read_csv(file)
-#         logger.info(f"📊 Uploaded CSV shape: {df.shape}")
-
-#         # Ensure CustomerID exists
-#         if 'CustomerID' not in df.columns:
-#             df['CustomerID'] = range(1, len(df) + 1)
-
-#         # Map categorical columns
-#         if 'GameGenre' in df.columns:
-#             df['GameGenre'] = df['GameGenre'].map(genre_map).fillna(0.0)
-#         if 'GameDifficulty' in df.columns:
-#             df['GameDifficulty'] = df['GameDifficulty'].map(difficulty_map).fillna(0.0)
-#         if 'EngagementLevel' in df.columns:
-#             df['EngagementLevel'] = df['EngagementLevel'].map(engagement_map).fillna(0.0)
-#         if 'Contract' in df.columns:
-#             df['Contract'] = df['Contract'].map(contract_map).fillna(0.0)
-
-#         # Ensure all features exist
-#         for col in full_features:
-#             if col not in df.columns:
-#                 df[col] = 0.0
-
-#         df_ordered = df[full_features]
-
-#         # Scale input
-#         scaled_input = scaler.transform(df_ordered.to_numpy())
-
-#         # Predictions
-#         raw_predictions = model.predict(scaled_input)
-#         churn_probabilities = model.predict_proba(scaled_input)
-
-#         # Prepare result DataFrame
-#         results = df.copy()
-#         results['Prediction'] = ["Churn" if p == 1 else "Stay" for p in raw_predictions]
-#         results['Churn_Probability'] = churn_probabilities[:, 1] * 100
-
-#         # ✅ Save predictions to DB (optimized bulk insert)
-#         if predictions_collection is not None:
-#             logs = []
-#             for i, row in results.iterrows():
-#                 logs.append({
-#                     "CustomerID": row['CustomerID'],
-#                     "input_data": df_ordered.iloc[i].to_dict(),
-#                     "prediction_result": row['Prediction'],
-#                     "churn_probability": round(row['Churn_Probability'], 2)
-#                 })
-#             if logs:
-#                 predictions_collection.insert_many(logs)
-
-#         # Save CSV locally
-#         output_file_path = "output_predictions.csv"
-#         if os.path.exists(output_file_path):
-#             results.to_csv(output_file_path, mode='a', index=False, header=False)
-#         else:
-#             results.to_csv(output_file_path, index=False)
-
-#         # Return CSV to client
-#         output = BytesIO()
-#         results.to_csv(output, index=False)
-#         output.seek(0)
-
-#         return send_file(
-#             output,
-#             mimetype='text/csv',
-#             as_attachment=True,
-#             download_name='churn_predictions.csv'
-#         )
-
-#     except Exception as e:
-#         logger.error(f"❌ Error in batch prediction: {str(e)}", exc_info=True)
-#         return jsonify({"error": str(e)}), 500
 
 @app.route('/predict_batch', methods=['POST'])
 def predict_batch():
@@ -320,7 +237,7 @@ def predict_batch():
             df_chunk = chunk.copy()
             
             # ✅ Ensure consistent column order for model
-            df_chunk = df_chunk.reindex(columns=expected_features, fill_value=0)
+            df_chunk = df_chunk.reindex(columns=full_features, fill_value=0)
 
             # ✅ Scale input
             X_scaled = scaler.transform(df_chunk)
